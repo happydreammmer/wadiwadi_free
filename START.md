@@ -68,6 +68,15 @@ git config --global user.name "Your Name"
 git config --global user.email "youremail@example.com"
 ```
 
+#### Cloning an Existing Repository
+
+To work on an existing project from a remote host like GitHub, you can use `git pull` to get the files. If you are starting from an empty directory, you first need to initialize git.
+
+```bash
+git init
+git pull https://github.com/happydreammmer/wadiwadi_free/
+```
+
 ---
 
 ### 4. Install the Google Gemini CLI
