@@ -1,12 +1,4 @@
-<p align="center">
-  <a href="https://www.youtube.com/@wadiwadi_ai" target="_blank">
-    <img src=".github/assets/wadiwadi-banner.jpg" alt="Wadi Wadi Project Banner">
-  </a>
-</p>
-
-<p align="center">
-  <img src=".github/assets/wadiwadi-logo.jpg" alt="Wadi Wadi Logo" width="200">
-</p>
+<h1 align="center">🌊 Wadi Wadi</h1>
 
 <p align="center">
   <strong>Your ideas, flowing into reality with the power of AI.</strong>
@@ -85,9 +77,90 @@ Each video on our channel is a self-contained story of creation. We follow a "Go
 
 This repository is the central hub for our community and every tool we create.
 
-*   **Project Structure:** Each video project will have its own dedicated folder in this repository (e.g., `/projects/01-email-triage-ai`).
+*   **Project Structure:** Each tool has its own dedicated folder in `/tools/` with the following structure:
+
+```
+tools/
+└── 001-linkedin-profile-researcher/
+    ├── CLAUDE.md                    # Development documentation
+    ├── README.md                    # Tool-specific documentation  
+    ├── TODO.md                      # Development tasks
+    ├── manifest.json               # Chrome extension configuration
+    ├── background.js               # Service worker
+    ├── styles.css                  # UI styles
+    ├── core/
+    │   ├── constants.js            # Configuration and colors
+    │   ├── content-main.js         # Main application logic
+    │   └── utils.js                # Utility functions
+    ├── components/
+    │   ├── api-key-manager.js      # API key management UI
+    │   ├── gemini-researcher.js    # AI research logic
+    │   ├── progress-panel.js       # Progress tracking UI
+    │   ├── results-panel.js        # Results display UI
+    │   └── screenshot-handler.js   # Screenshot handling
+    └── utils/
+        ├── pdf-export.js           # PDF generation
+        └── storage.js              # Data storage management
+```
+*   **Repository Structure:**
+    ```
+    wadiwadi-free/
+    ├── README.md                   # This file
+    ├── LICENSE                     # MIT License
+    ├── START.md                    # Getting started guide
+    ├── docs/                       # Documentation
+    │   └── GEMINI_API_DOC.md      # Gemini API documentation
+    └── tools/                      # All project tools
+        └── 001-linkedin-profile-researcher/  # LinkedIn research extension
+    ```
 *   **Get the Code:** To get started with a project, you can `git clone` this repository to your computer.
 *   **Contribute:** Have an idea for a tool or an improvement? Open an "Issue" in the repository. We want this to be a collaborative space.
+
+---
+
+## 🛠️ Available Tools
+
+### 001 - LinkedIn Profile Researcher
+**📍 Location:** `/tools/001-linkedin-profile-researcher/`
+
+A powerful Chrome extension that transforms LinkedIn profile research using AI. This tool demonstrates the complete journey from a simple idea to a production-ready browser extension.
+
+**✨ Features:**
+- 🔍 **AI-Powered Analysis:** Gemini 2.5 Pro/Flash models with 8192 token limit for comprehensive analysis
+- 🌐 **Bilingual Research:** Generates detailed reports in both English and Arabic with language switching
+- 📸 **Smart Screenshot Capture:** One-click profile analysis using Chrome's activeTab permissions
+- 📊 **Professional Reports:** Detailed insights with executive summary, company research, and verification
+- 💾 **Intelligent Caching:** 7-day local storage with automatic cleanup and access tracking
+- 📄 **PDF Export:** Clean, printable reports with optimized page breaks and professional formatting
+- 🎨 **Modern UI:** Glassmorphic design with real-time progress tracking and smooth animations
+- 🔄 **Smart Positioning:** Results panel automatically moves to progress panel position after completion
+
+**🏗️ Architecture:**
+- **Modular Design:** Clean separation across 5 core components and 3 utility modules
+- **Gemini AI Integration:** Multimodal analysis with automatic fallback and Google Search integration
+- **Chrome Extension V3:** Manifest V3 compliance with proper permissions and service workers
+- **Optimized Layout:** Single-scroll interface with flexbox layout and no double scrolling issues
+- **Error Handling:** Comprehensive error recovery with user-friendly messages
+
+**🚀 Status:** ✅ **Production Ready** - Fully functional with recent optimizations (June 2025)
+
+**💡 What You'll Learn:**
+- **Chrome Extension Development:** Manifest V3, service workers, content scripts, and permissions
+- **AI API Integration:** Gemini API with multimodal analysis, fallback handling, and token optimization
+- **Modern JavaScript:** ES6+ with async/await, modular architecture, and clean separation of concerns
+- **UI/UX Design:** Glassmorphic interfaces, real-time progress tracking, and responsive layouts
+- **Browser APIs:** Screenshot capture, storage management, and message passing
+- **PDF Generation:** Print-optimized layouts with proper page breaks and typography
+- **Debugging & Optimization:** Error handling, performance optimization, and production troubleshooting
+
+**🔧 Recent Fixes & Optimizations (June 2025):**
+- ✅ Increased API token limits from 2048 to 8192 for longer responses
+- ✅ Fixed PDF export constructor loading issues  
+- ✅ Implemented smart panel positioning after research completion
+- ✅ Optimized layout to eliminate double scrolling with flexbox architecture
+- ✅ Enhanced print styles for professional PDF output
+
+This tool showcases the entire development lifecycle, from initial concept to a polished, production-ready application that solves a real-world problem—including the messy reality of debugging and continuous improvement.
 
 <br>
 

@@ -1,0 +1,150 @@
+/* LinkedIn Profile Researcher - Styles */
+
+/* Research Button Styles */
+#linkedin-researcher-button {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+#linkedin-researcher-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+#linkedin-researcher-button:active {
+    transform: translateY(0);
+}
+
+/* Progress Panel Styles */
+#linkedin-researcher-progress {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+#linkedin-researcher-progress h3 {
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+#close-progress {
+    color: #666;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#close-progress:hover {
+    color: #333;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+/* Progress Bar Animation */
+#progress-bar {
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Results Panel (for future implementation) */
+.linkedin-researcher-results {
+    max-height: 400px;
+    overflow-y: auto;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 16px;
+    padding-top: 16px;
+}
+
+/* Export Buttons (for future implementation) */
+.linkedin-researcher-export {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.linkedin-researcher-export button {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #0a66c2;
+    background: white;
+    color: #0a66c2;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.linkedin-researcher-export button:hover {
+    background: #0a66c2;
+    color: white;
+}
+
+/* Animations */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes slideInRight {
+    0% {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes slideOutRight {
+    0% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #linkedin-researcher-button {
+        top: 10px !important;
+        right: 10px !important;
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+    }
+    
+    #linkedin-researcher-progress {
+        top: 60px !important;
+        right: 10px !important;
+        width: calc(100vw - 40px) !important;
+        max-width: 300px !important;
+    }
+
+    .linkedin-researcher-results {
+        top: 160px !important;
+        right: 10px !important;
+        width: calc(100vw - 40px) !important;
+        max-width: 380px !important;
+        max-height: 70vh !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #linkedin-researcher-button {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+    }
+    
+    .linkedin-researcher-results {
+        max-height: 60vh !important;
+    }
+}
