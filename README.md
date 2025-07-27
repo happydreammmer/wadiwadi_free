@@ -1,4 +1,6 @@
-<h1 align="center">🌊 Wadi Wadi</h1>
+<h1 align="center">
+  <img src=".github/assets/wadiwadi-logo.jpg" alt="Wadi Wadi Logo" width="200">
+</h1>
 <p align="center">
   <a href="https://www.youtube.com/@wadiwadi_ai" target="_blank">
     <img src=".github/assets/wadiwadi-banner.jpg" alt="Wadi Wadi Project Banner">
