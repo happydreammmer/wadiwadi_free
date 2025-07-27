@@ -6,11 +6,6 @@
     <img src=".github/assets/wadiwadi-banner.jpg" alt="Wadi Wadi Project Banner">
   </a>
 </p>
-
-<p align="center">
-  <img src=".github/assets/wadiwadi-logo.jpg" alt="Wadi Wadi Logo" width="200">
-</p>
-
 <p align="center">
   <strong>Your ideas, flowing into reality with the power of AI.</strong>
 </p>
