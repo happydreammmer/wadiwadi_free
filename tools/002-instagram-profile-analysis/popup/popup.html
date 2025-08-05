@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wadi Wadi - Instagram Analyzer</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>🌊 Wadi Wadi</h1>
+                    <p class="logo-subtitle">Instagram Analyzer</p>
+                </div>
+            </div>
+            <div class="status" id="status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Checking page...</span>
+            </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="profile">
+                👤 Profile Extraction
+            </button>
+            <button class="tab-btn" data-tab="media">
+                📥 Media Download
+            </button>
+        </div>
+
+        <div class="main-content">
+            <!-- Profile Data Tab -->
+            <div class="tab-panel active" id="profileTab">
+                <section class="profile-section" id="profileSection">
+            <h2>Profile Data</h2>
+            <div class="profile-header">
+                <div class="profile-picture-container">
+                    <div class="profile-picture-placeholder" id="profilePicturePlaceholder">
+                        <span>👤</span>
+                    </div>
+                </div>
+                <div class="profile-basic-info">
+                    <div class="profile-item username-item">
+                        <span id="username" class="username-text">-</span>
+                        <span id="privateBadge" class="private-badge" style="display: none;">🔒</span>
+                    </div>
+                    <div class="profile-category" id="profileCategory" style="display: none;"></div>
+                </div>
+                <div class="extract-button-container">
+                    <button id="extractBtn" class="btn btn-primary extract-btn-top">
+                        🔄 Extract Data
+                    </button>
+                </div>
+            </div>
+            
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="posts">-</span>
+                    <span class="stat-label">Posts</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="followers">-</span>
+                    <span class="stat-label">Followers</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="following">-</span>
+                    <span class="stat-label">Following</span>
+                </div>
+            </div>
+
+            <div class="profile-details">
+                <div class="profile-item bio-item" id="bioContainer" style="display: none;">
+                    <label>Bio:</label>
+                    <p id="bio"></p>
+                </div>
+                <div class="profile-item url-item" id="urlContainer" style="display: none;">
+                    <label>Website:</label>
+                    <a id="externalUrl" href="" target="_blank" rel="noopener noreferrer"></a>
+                </div>
+            </div>
+
+            <div class="button-row-compact">
+                <button id="copyAllBtn" class="btn btn-secondary" disabled>
+                    📋 Copy All Data
+                </button>
+                <button id="exportBtn" class="btn btn-secondary" disabled>
+                    💾 Export JSON
+                </button>
+            </div>
+        </section>
+            </div>
+
+            <!-- Media Download Tab -->
+            <div class="tab-panel" id="mediaTab">
+                <section class="media-section" id="mediaSection">
+            <div class="section-header">
+                <h2>Media Downloads</h2>
+                <div class="header-controls">
+                    <div class="media-filter">
+                        <select id="mediaFilter">
+                            <option value="all">All Media</option>
+                            <option value="images">Images Only</option>
+                            <option value="reels">Reels Only</option>
+                        </select>
+                    </div>
+                    <button class="settings-toggle" id="settingsToggle" title="Settings">⚙️</button>
+                </div>
+            </div>
+            
+            <div class="media-stats">
+                <div class="stats-info">
+                    <span>Found: <span id="mediaCount">0</span> items</span>
+                    <span id="selectedCount" style="display: none;">Selected: <span id="selectedNumber">0</span></span>
+                </div>
+                <button id="scanMediaBtn" class="btn btn-small">
+                    🔍 Scan Media
+                </button>
+            </div>
+            
+            <div class="settings-panel" id="settingsPanel">
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="highQualityOnly" checked>
+                        High quality only
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="includeVideos" checked>
+                        Include videos
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="organizeByDate">
+                        Organize by date
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label for="filenameFormat">Filename format:</label>
+                    <select id="filenameFormat">
+                        <option value="username_index">username_001</option>
+                        <option value="username_postid">username_postID</option>
+                        <option value="postid_only">postID only</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="media-controls">
+                <button id="downloadAllBtn" class="btn btn-primary" disabled>
+                    ⬇️ Download Selected
+                </button>
+                <button id="selectAllBtn" class="btn btn-secondary">
+                    ☑️ Select All
+                </button>
+            </div>
+            
+            <div class="download-progress" id="downloadProgress" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Preparing download...</div>
+            </div>
+            
+            <div class="media-grid-container">
+                <div class="media-grid" id="mediaGrid">
+                    <!-- Media items will be populated here -->
+                </div>
+            </div>
+        </section>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner"></div>
+            <p id="loadingText">Processing...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage">
+            <p id="errorText"></p>
+            <button id="closeErrorBtn">✕</button>
+        </div>
+        
+        <!-- Toast Notifications -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
