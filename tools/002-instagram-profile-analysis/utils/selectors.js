@@ -16,26 +16,23 @@ window.InstagramSelectors = {
         
         // Post count (from actual HTML: "549 posts")
         posts: [
-            'li span:contains("posts")', // Within list item containing "posts"
-            'ul li span.html-span:contains("posts")', // More specific path
-            'section ul li span:contains("posts")', // In profile stats section
-            'span[title]:contains("posts")' // With title attribute
+            'ul li span.html-span', // More specific path
+            'section ul li span', // In profile stats section
+            'li span.html-span' // Within list item
         ],
         
         // Followers count (from actual HTML: href="/bousher_valley/followers/")
         followers: [
             'a[href*="/followers/"] span.html-span', // Link to followers page with span
             'a[href*="/followers/"] span[title]', // With title showing full count
-            'li a[href*="/followers/"] span', // Within list item
-            'span[title]:contains("followers")' // Fallback with title
+            'li a[href*="/followers/"] span' // Within list item
         ],
         
         // Following count (from actual HTML: href="/bousher_valley/following/")
         following: [
             'a[href*="/following/"] span.html-span', // Link to following page
             'a[href*="/following/"] span[title]', // With title showing full count
-            'li a[href*="/following/"] span', // Within list item
-            'span[title]:contains("following")' // Fallback with title
+            'li a[href*="/following/"] span' // Within list item
         ],
         
         // Bio/Description (from actual HTML structure)
@@ -74,7 +71,6 @@ window.InstagramSelectors = {
         category: [
             'div._ap3a._aaco._aacu._aacy._aad6._aade[dir="auto"]', // Business category
             'section div div div._ap3a._aaco._aacu._aacy._aad6._aade', // Category in bio section
-            'div[dir="auto"]:contains("Company"):contains("Business")', // Business indicators
             '[data-testid="business-category"]' // If Instagram adds test IDs
         ],
         
@@ -83,7 +79,6 @@ window.InstagramSelectors = {
             // New button-based bio link selectors (based on actual HTML structure)
             'button svg[aria-label*="Link icon"] + div[dir="auto"]', // Bio link button text next to link icon
             'button svg[aria-label="Link icon"]', // Bio link buttons with link icon
-            'button div[dir="auto"]:contains(".")', // Button text containing domain (has dots)
             'button._aswp._aswq._aswu._asw_._asx2 div[dir="auto"]', // Specific button classes with domain text
             'div._ap3a._aaco._aacw._aacz._aada._aade[dir="auto"]', // Domain text container classes
             
@@ -98,7 +93,6 @@ window.InstagramSelectors = {
         // Location (from actual HTML: "Azaiba, Muscat, Oman")
         location: [
             'h1._ap3a._aaco._aacu._aacy._aad6._aade[dir="auto"]', // Location text
-            'div[dir="auto"]:contains(","):last-child', // Text with commas (addresses)
             'section div:last-child span[dir="auto"]' // Last element in bio section
         ]
     },
@@ -200,8 +194,7 @@ window.InstagramSelectors = {
         
         followButton: [
             'button._aswp._aswr._aswu._asw_._asx2', // Follow button classes
-            'button:contains("Follow")', // Button with Follow text
-            'div._ap3a._aaco._aacw._aad6._aade:contains("Follow")' // Follow button text
+            'div._ap3a._aaco._aacw._aad6._aade' // Follow button text
         ]
     },
     

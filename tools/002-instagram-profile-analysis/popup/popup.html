@@ -30,6 +30,9 @@
             <button class="tab-btn" data-tab="media">
                 📥 Media Download
             </button>
+            <button class="tab-btn" data-tab="ai-analysis">
+                🤖 AI Analysis
+            </button>
         </div>
 
         <div class="main-content">
@@ -104,6 +107,7 @@
                         <select id="mediaFilter">
                             <option value="all">All Media</option>
                             <option value="images">Images Only</option>
+                            <option value="albums">Albums Only</option>
                             <option value="reels">Reels Only</option>
                         </select>
                     </div>
@@ -172,6 +176,53 @@
                 </div>
             </div>
         </section>
+            </div>
+
+            <!-- AI Analysis Tab -->
+            <div class="tab-panel" id="ai-analysisTab">
+                <section class="ai-section">
+                    <h2>AI-Powered Analysis</h2>
+                    <div class="api-key-section">
+                        <label for="apiKey">Gemini API Key:</label>
+                        <div class="api-key-input-wrapper">
+                            <input type="password" id="apiKey" placeholder="Enter your Gemini API key">
+                            <button id="saveApiKeyBtn" class="btn btn-secondary">Save</button>
+                        </div>
+                    </div>
+
+                    <div class="analysis-mode-section">
+                        <label>Analysis Mode:</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="analysisMode" value="my_profile" checked> My Profile</label>
+                            <label><input type="radio" name="analysisMode" value="competitor"> Competitor</label>
+                        </div>
+                    </div>
+
+                    <button id="analyzeProfileBtn" class="btn btn-primary" disabled>
+                        Analyze This Profile
+                    </button>
+
+                    <div class="media-selection-modal" id="mediaSelectionModal">
+                        <div class="media-selection-content">
+                            <h3>Select Media for Analysis</h3>
+                            <p>Choose up to 5 images and 5 videos.</p>
+                            <div class="selection-counters">
+                                <span id="imageSelectionCount">Images: 0/5</span>
+                                <span id="videoSelectionCount">Videos: 0/5</span>
+                            </div>
+                            <div class="media-selection-grid" id="mediaSelectionGrid"></div>
+                            <div class="media-selection-actions">
+                                <button id="confirmAnalysisBtn" class="btn btn-primary" disabled>Analyze Selection</button>
+                                <button id="cancelAnalysisBtn" class="btn btn-secondary">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-results-section" id="analysisResultsSection" style="display: none;">
+                        <h3>Analysis Results</h3>
+                        <div id="analysisResult" class="analysis-result-content"></div>
+                    </div>
+                </section>
             </div>
         </div>
 

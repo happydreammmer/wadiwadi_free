@@ -194,23 +194,134 @@ window.InstagramExtractor = class {
         }
     }
 
-    extractFollowersCount() {
+    isFormattedNumber(text) {
         try {
-            const element = trySelectors(this.selectors.profile.followers);
-            if (element) {
-                const text = extractText(element);
-                const number = this.helpers.text.extractNumber(text);
-                if (number !== null) {
+            if (!text) return false;
+            
+            // Check if text matches patterns like: 70.4K, 1.2M, 1,234, 5000, etc.
+            const patterns = [
+                /^\d+\.?\d*[KM]$/i, // 70.4K, 1.2M
+                /^\d{1,3}(,\d{3})*$/, // 1,234, 12,345,678
+                /^\d+$/ // Plain numbers: 1234, 5000
+            ];
+            
+            return patterns.some(pattern => pattern.test(text.trim()));
+        } catch (error) {
+            console.error('Formatted number check error:', error);
+            return false;
+        }
+    }
+
+    parseFormattedNumber(text) {
+        try {
+            if (!text) return null;
+            
+            const cleanText = text.trim().toUpperCase();
+            
+            // Handle "K" suffix (thousands)
+            if (cleanText.includes('K')) {
+                const baseNumber = parseFloat(cleanText.replace(/[^\d.]/g, ''));
+                if (!isNaN(baseNumber)) {
+                    return Math.round(baseNumber * 1000);
+                }
+            }
+            
+            // Handle "M" suffix (millions)
+            if (cleanText.includes('M')) {
+                const baseNumber = parseFloat(cleanText.replace(/[^\d.]/g, ''));
+                if (!isNaN(baseNumber)) {
+                    return Math.round(baseNumber * 1000000);
+                }
+            }
+            
+            // Handle comma-separated numbers (1,234,567)
+            if (cleanText.includes(',')) {
+                const number = parseInt(cleanText.replace(/,/g, ''), 10);
+                if (!isNaN(number) && number >= 0) {
                     return number;
                 }
+            }
+            
+            // Handle plain numbers
+            const number = parseInt(cleanText, 10);
+            if (!isNaN(number) && number >= 0) {
+                return number;
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('Formatted number parsing error:', error);
+            return null;
+        }
+    }
+
+    extractFollowersCount() {
+        try {
+            // Updated selectors based on the actual HTML structure
+            const followersSelectors = [
+                // From the HTML sample: <span class="html-span xdj266r x14z9mp xat24cr x1lziwak xexx8yu xyri2b x18d9i69 x1c1uobl x1hl2dhg x16tdsg8 x1vvkbs">70.4K</span> followers
+                'a[href*="/followers/"] span.html-span', // Main selector for formatted numbers
+                'a[href*="/followers/"] span[title]', // With title showing full count
+                'li a[href*="/followers/"] span', // Within list item
+                'span[title]', // With title attribute
+                // Additional selectors for the exact HTML structure
+                'a[href*="/followers/"] span.x5n08af', // The span with "70.4K" text
+                'span.html-span.xdj266r.x14z9mp' // Specific classes from HTML
+            ];
+            
+            // Method 1: Try to find the formatted number next to "followers" text
+            const allSpans = document.querySelectorAll('span');
+            for (const span of allSpans) {
+                const spanText = span.textContent.trim();
+                const parentText = span.parentElement ? span.parentElement.textContent : '';
+                const grandParentText = span.parentElement?.parentElement ? span.parentElement.parentElement.textContent : '';
                 
-                // Handle "K" and "M" suffixes
-                if (text.includes('K')) {
-                    const baseNumber = parseFloat(text.replace(/[^\d.]/g, ''));
-                    return Math.round(baseNumber * 1000);
-                } else if (text.includes('M')) {
-                    const baseNumber = parseFloat(text.replace(/[^\d.]/g, ''));
-                    return Math.round(baseNumber * 1000000);
+                // Check if context contains "followers" and span contains a formatted number
+                const contextHasFollowers = parentText.includes('followers') || grandParentText.includes('followers');
+                
+                if (contextHasFollowers && this.isFormattedNumber(spanText)) {
+                    const number = this.parseFormattedNumber(spanText);
+                    if (number !== null) {
+                        return number;
+                    }
+                }
+            }
+            
+            // Method 2: Try the specific selectors
+            for (const selector of followersSelectors) {
+                const elements = document.querySelectorAll(selector);
+                for (const element of elements) {
+                    const text = extractText(element);
+                    if (!text) continue;
+                    
+                    const parentText = element.parentElement ? element.parentElement.textContent : '';
+                    const grandParentText = element.parentElement?.parentElement ? element.parentElement.parentElement.textContent : '';
+                    
+                    const contextHasFollowers = parentText.includes('followers') || grandParentText.includes('followers');
+                    
+                    if (contextHasFollowers && this.isFormattedNumber(text)) {
+                        const number = this.parseFormattedNumber(text);
+                        if (number !== null) {
+                            return number;
+                        }
+                    }
+                }
+            }
+            
+            // Method 3: Look for pattern like "70.4K followers" in any container
+            const allElements = document.querySelectorAll('*');
+            for (const element of allElements) {
+                const elementText = element.textContent;
+                if (elementText.includes('followers')) {
+                    // Look for patterns like "70.4K followers" or "1,234 followers"
+                    const followersPattern = /([\d,.]+[KM]?)\s+followers/i;
+                    const match = elementText.match(followersPattern);
+                    if (match) {
+                        const number = this.parseFormattedNumber(match[1]);
+                        if (number !== null) {
+                            return number;
+                        }
+                    }
                 }
             }
             
@@ -223,21 +334,70 @@ window.InstagramExtractor = class {
 
     extractFollowingCount() {
         try {
-            const element = trySelectors(this.selectors.profile.following);
-            if (element) {
-                const text = extractText(element);
-                const number = this.helpers.text.extractNumber(text);
-                if (number !== null) {
-                    return number;
-                }
+            // Updated selectors based on the actual HTML structure (similar to followers)
+            const followingSelectors = [
+                'a[href*="/following/"] span.html-span', // Main selector for formatted numbers
+                'a[href*="/following/"] span[title]', // With title showing full count
+                'li a[href*="/following/"] span', // Within list item
+                'span[title]', // With title attribute
+                // Additional selectors for the exact HTML structure
+                'a[href*="/following/"] span.x5n08af', // The span with formatted text
+                'span.html-span.xdj266r.x14z9mp' // Specific classes from HTML
+            ];
+            
+            // Method 1: Try to find the formatted number next to "following" text
+            const allSpans = document.querySelectorAll('span');
+            for (const span of allSpans) {
+                const spanText = span.textContent.trim();
+                const parentText = span.parentElement ? span.parentElement.textContent : '';
+                const grandParentText = span.parentElement?.parentElement ? span.parentElement.parentElement.textContent : '';
                 
-                // Handle "K" and "M" suffixes
-                if (text.includes('K')) {
-                    const baseNumber = parseFloat(text.replace(/[^\d.]/g, ''));
-                    return Math.round(baseNumber * 1000);
-                } else if (text.includes('M')) {
-                    const baseNumber = parseFloat(text.replace(/[^\d.]/g, ''));
-                    return Math.round(baseNumber * 1000000);
+                // Check if context contains "following" and span contains a formatted number
+                const contextHasFollowing = parentText.includes('following') || grandParentText.includes('following');
+                
+                if (contextHasFollowing && this.isFormattedNumber(spanText)) {
+                    const number = this.parseFormattedNumber(spanText);
+                    if (number !== null) {
+                        return number;
+                    }
+                }
+            }
+            
+            // Method 2: Try the specific selectors
+            for (const selector of followingSelectors) {
+                const elements = document.querySelectorAll(selector);
+                for (const element of elements) {
+                    const text = extractText(element);
+                    if (!text) continue;
+                    
+                    const parentText = element.parentElement ? element.parentElement.textContent : '';
+                    const grandParentText = element.parentElement?.parentElement ? element.parentElement.parentElement.textContent : '';
+                    
+                    const contextHasFollowing = parentText.includes('following') || grandParentText.includes('following');
+                    
+                    if (contextHasFollowing && this.isFormattedNumber(text)) {
+                        const number = this.parseFormattedNumber(text);
+                        if (number !== null) {
+                            return number;
+                        }
+                    }
+                }
+            }
+            
+            // Method 3: Look for pattern like "1,234 following" in any container
+            const allElements = document.querySelectorAll('*');
+            for (const element of allElements) {
+                const elementText = element.textContent;
+                if (elementText.includes('following')) {
+                    // Look for patterns like "1.2K following" or "1,234 following"
+                    const followingPattern = /([\d,.]+[KM]?)\s+following/i;
+                    const match = elementText.match(followingPattern);
+                    if (match) {
+                        const number = this.parseFormattedNumber(match[1]);
+                        if (number !== null) {
+                            return number;
+                        }
+                    }
                 }
             }
             
@@ -325,27 +485,72 @@ window.InstagramExtractor = class {
 
     extractProfilePicture() {
         try {
-            // Enhanced profile picture selectors
+            // Enhanced profile picture selectors based on the actual HTML structure
             const profilePictureSelectors = [
+                // From the HTML sample: <img alt="claudeai's profile picture" class="xpdipgo x972fbf x10w94by x1qhh985 x14e42zd xk390pu x5yr21d xdj266r x14z9mp xat24cr x1lziwak xl1xv1r xexx8yu xyri2b x18d9i69 x1c1uobl x11njtxf xh8yej3" 
                 'img[alt*="profile picture"]', // Alt text contains "profile picture"
+                'img.xpdipgo.x972fbf.x10w94by.x1qhh985.x14e42zd', // Specific classes from HTML
                 'span[role="link"] img', // Profile image within link span
-                'canvas + span img', // Image next to canvas element
+                'canvas + span img', // Image next to canvas element (from HTML: <canvas> followed by <span> with <img>)
                 'header img[crossorigin="anonymous"]', // Profile image in header
-                'img.xpdipgo.x972fbf.x10w94by', // Specific profile image classes
                 'img[src*="fbcdn.net"][alt*="profile"]', // Instagram CDN images with profile alt
+                'section span[role="link"] img', // Image in section within span with role="link"
                 'header section img', // Any image in header section
-                'header img[src*="instagram"]' // Instagram images in header
+                'img[draggable="false"][crossorigin="anonymous"]' // From HTML sample attributes
             ];
             
-            // Try each selector
+            // Method 1: Try to find profile picture using specific patterns from HTML
+            const allImages = document.querySelectorAll('img');
+            for (const img of allImages) {
+                const alt = img.alt || '';
+                const src = img.src || '';
+                
+                // Check for profile picture indicators
+                if (alt.includes('profile picture') || alt.includes('\'s profile picture')) {
+                    const url = extractUrl(img);
+                    if (url && this.helpers.validate.url(url)) {
+                        // Additional validation for profile picture URLs
+                        if ((url.includes('fbcdn.net') || url.includes('cdninstagram') || url.includes('instagram')) && 
+                            !url.includes('static.cdninstagram.com')) {
+                            return this.getHighResolutionUrl(url);
+                        }
+                    }
+                }
+            }
+            
+            // Method 2: Try the specific selectors
             for (const selector of profilePictureSelectors) {
                 const elements = document.querySelectorAll(selector);
                 for (const element of elements) {
                     const url = extractUrl(element);
+                    const alt = element.alt || '';
+                    
                     if (url && this.helpers.validate.url(url)) {
                         // Additional validation for profile picture URLs
-                        if (url.includes('fbcdn.net') || url.includes('cdninstagram') || url.includes('instagram')) {
-                            return this.helpers.url.getHighResUrl(url);
+                        const isProfileUrl = (url.includes('fbcdn.net') || url.includes('cdninstagram') || url.includes('instagram')) && 
+                                           !url.includes('static.cdninstagram.com');
+                        const hasProfileAlt = alt.includes('profile picture') || alt.includes('\'s profile picture');
+                        
+                        if (isProfileUrl && (hasProfileAlt || selector.includes('canvas + span img'))) {
+                            return this.getHighResolutionUrl(url);
+                        }
+                    }
+                }
+            }
+            
+            // Method 3: Look for images in header section that might be profile pictures
+            const headerSection = document.querySelector('header, section');
+            if (headerSection) {
+                const headerImages = headerSection.querySelectorAll('img[src*="fbcdn.net"], img[src*="cdninstagram"], img[src*="instagram"]');
+                for (const img of headerImages) {
+                    const url = extractUrl(img);
+                    if (url && this.helpers.validate.url(url) && !url.includes('static.cdninstagram.com')) {
+                        // Check if this looks like a profile picture (square dimensions, reasonable size)
+                        const width = img.naturalWidth || img.width || 0;
+                        const height = img.naturalHeight || img.height || 0;
+                        
+                        if (width >= 100 && height >= 100 && Math.abs(width - height) < 50) {
+                            return this.getHighResolutionUrl(url);
                         }
                     }
                 }
@@ -356,7 +561,7 @@ window.InstagramExtractor = class {
             if (element) {
                 const url = extractUrl(element);
                 if (url && this.helpers.validate.url(url)) {
-                    return this.helpers.url.getHighResUrl(url);
+                    return this.getHighResolutionUrl(url);
                 }
             }
             
@@ -667,6 +872,10 @@ window.InstagramExtractor = class {
                     // Skip profile pictures and very small images
                     if (this.isValidMediaImage(element, url)) {
                         const postData = this.extractPostMetadata(element);
+                        
+                        // Check if this is part of an album/carousel
+                        const albumData = this.checkIfPartOfAlbum(element);
+                        
                         images.push({
                             type: 'image',
                             url: this.getHighResolutionUrl(url),
@@ -678,11 +887,19 @@ window.InstagramExtractor = class {
                             postId: postData.postId,
                             postType: postData.postType,
                             postUrl: postData.postUrl,
-                            filename: this.generateMediaFilename(url, postData, 'image')
+                            isAlbum: albumData.isAlbum,
+                            albumIndex: albumData.albumIndex,
+                            albumTotal: albumData.albumTotal,
+                            filename: this.generateMediaFilename(url, postData, 'image', albumData.albumIndex)
                         });
                     }
                 }
             }
+            
+            // Additionally, extract album posts that might need special handling
+            const albumImages = this.extractAlbumImages();
+            images.push(...albumImages);
+            
         } catch (error) {
             console.error('Image extraction error:', error);
         }
@@ -783,9 +1000,336 @@ window.InstagramExtractor = class {
         }
     }
 
+    checkIfPartOfAlbum(element) {
+        try {
+            // Default response
+            const defaultResponse = {
+                isAlbum: false,
+                albumIndex: null,
+                albumTotal: null
+            };
+            
+            // Look for carousel indicators in the parent containers
+            let currentElement = element;
+            let searchDepth = 0;
+            const maxDepth = 8;
+            
+            while (currentElement && searchDepth < maxDepth) {
+                // Check for carousel SVG icon
+                const carouselSvg = currentElement.querySelector('svg[aria-label="Carousel"]');
+                if (carouselSvg) {
+                    return {
+                        isAlbum: true,
+                        albumIndex: this.getAlbumIndex(element),
+                        albumTotal: null // We'll try to detect this when opening the album
+                    };
+                }
+                
+                // Check for carousel-related classes or structures
+                if (currentElement.classList) {
+                    const classString = currentElement.className;
+                    // Look for carousel-related classes
+                    if (classString.includes('_aagu') || classString.includes('_aagv')) {
+                        // These classes appeared in the album HTML sample
+                        const hasCarouselIndicator = currentElement.closest('a[href*="/p/"]');
+                        if (hasCarouselIndicator) {
+                            const carouselCheck = hasCarouselIndicator.querySelector('svg[aria-label="Carousel"]');
+                            if (carouselCheck) {
+                                return {
+                                    isAlbum: true,
+                                    albumIndex: this.getAlbumIndex(element),
+                                    albumTotal: null
+                                };
+                            }
+                        }
+                    }
+                }
+                
+                currentElement = currentElement.parentElement;
+                searchDepth++;
+            }
+            
+            return defaultResponse;
+        } catch (error) {
+            console.warn('Error checking album status:', error);
+            return {
+                isAlbum: false,
+                albumIndex: null,
+                albumTotal: null
+            };
+        }
+    }
+
+    getAlbumIndex(element) {
+        try {
+            // Try to determine the index of this image in the album
+            // Look for carousel list structure
+            const carouselList = element.closest('ul._acay');
+            if (carouselList) {
+                const listItems = carouselList.querySelectorAll('li._acaz');
+                for (let i = 0; i < listItems.length; i++) {
+                    if (listItems[i].contains(element)) {
+                        return i + 1; // 1-based indexing
+                    }
+                }
+            }
+            
+            // Fallback: try to detect from transform styles
+            const listItem = element.closest('li._acaz');
+            if (listItem) {
+                const transformStyle = listItem.style.transform;
+                if (transformStyle && transformStyle.includes('translateX')) {
+                    const match = transformStyle.match(/translateX\((\d+)px\)/);
+                    if (match) {
+                        const translateX = parseInt(match[1]);
+                        // Assuming each slide is around 500-600px wide
+                        const estimatedIndex = Math.round(translateX / 524) + 1;
+                        return estimatedIndex > 0 ? estimatedIndex : 1;
+                    }
+                }
+            }
+            
+            return 1; // Default to first image
+        } catch (error) {
+            console.warn('Error getting album index:', error);
+            return 1;
+        }
+    }
+
+    extractAlbumImages() {
+        const albumImages = [];
+        
+        try {
+            // Find all posts with carousel indicators
+            const carouselPosts = document.querySelectorAll('a[href*="/p/"] svg[aria-label="Carousel"]');
+            
+            for (const carouselSvg of carouselPosts) {
+                const postLink = carouselSvg.closest('a[href*="/p/"]');
+                if (postLink) {
+                    const postUrl = postLink.href;
+                    const postId = this.extractPostIdFromUrl(postUrl);
+                    
+                    // Find the thumbnail image for this carousel post
+                    const thumbnailImg = postLink.querySelector('img');
+                    if (thumbnailImg && thumbnailImg.src) {
+                        albumImages.push({
+                            type: 'album',
+                            url: postUrl, // This will need to be opened to get all images
+                            thumbnail: thumbnailImg.src,
+                            originalUrl: postUrl,
+                            alt: thumbnailImg.alt || '',
+                            width: thumbnailImg.naturalWidth || thumbnailImg.width,
+                            height: thumbnailImg.naturalHeight || thumbnailImg.height,
+                            postId: postId,
+                            postType: 'album',
+                            postUrl: postUrl,
+                            isAlbum: true,
+                            albumIndex: 1,
+                            albumTotal: null,
+                            needsExpansion: true, // Flag to indicate this needs to be opened to get all images
+                            filename: this.generateMediaFilename(postUrl, { postId, postType: 'album' }, 'album', 1)
+                        });
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Album extraction error:', error);
+        }
+        
+        return albumImages;
+    }
+
+    async extractImagesFromAlbumPage(albumUrl) {
+        try {
+            // This method would be called when an album post is opened
+            // It extracts all images from the carousel on the album page
+            const albumImages = [];
+            
+            // Wait for the album page to load
+            await this.helpers.timing.sleep(2000);
+            
+            // Updated selectors based on the actual HTML samples
+            // Try multiple approaches to find the carousel container
+            let carouselContainer = null;
+            
+            // Method 1: Look for the main carousel container
+            carouselContainer = document.querySelector('div._aatk._aatl') || 
+                              document.querySelector('div[style*="max-height"][style*="max-width"]') ||
+                              document.querySelector('ul._acay');
+            
+            if (!carouselContainer) {
+                console.warn('Album carousel container not found, trying alternative approach');
+                
+                // Method 2: Look for carousel items directly
+                const carouselItems = document.querySelectorAll('li._acaz');
+                if (carouselItems.length > 0) {
+                    // Process items directly
+                    return this.processCarouselItems(carouselItems, albumUrl);
+                }
+                
+                // Method 3: Look for images in _aagu containers (from the sample HTML)
+                const albumContainers = document.querySelectorAll('div._aagu._aato, div._aagu');
+                if (albumContainers.length > 0) {
+                    return this.processAlbumContainers(albumContainers, albumUrl);
+                }
+                
+                console.warn('No album content found');
+                return [];
+            }
+            
+            // Find all carousel items within the container
+            const carouselItems = carouselContainer.querySelectorAll('li._acaz') ||
+                                carouselContainer.querySelectorAll('li');
+            
+            if (carouselItems.length > 0) {
+                return this.processCarouselItems(carouselItems, albumUrl);
+            }
+            
+            // If no carousel items found, look for direct image containers
+            const imageContainers = carouselContainer.querySelectorAll('div._aagu, div[class*="_aagu"]');
+            if (imageContainers.length > 0) {
+                return this.processAlbumContainers(imageContainers, albumUrl);
+            }
+            
+            return [];
+        } catch (error) {
+            console.error('Album page extraction error:', error);
+            return [];
+        }
+    }
+
+    processCarouselItems(carouselItems, albumUrl) {
+        const albumImages = [];
+        
+        for (let i = 0; i < carouselItems.length; i++) {
+            const item = carouselItems[i];
+            
+            // Look for images in this carousel item
+            const img = item.querySelector('img');
+            if (img && img.src && !img.alt.includes('profile picture')) {
+                // Ensure we have a valid Instagram CDN URL, not a blob or page URL
+                if (img.src.includes('scontent') || img.src.includes('cdninstagram') || img.src.includes('fbcdn')) {
+                    const postId = this.extractPostIdFromUrl(albumUrl);
+                    albumImages.push({
+                        type: 'image',
+                        url: this.getHighResolutionUrl(img.src),
+                        thumbnail: img.src,
+                        originalUrl: img.src,
+                        alt: img.alt || '',
+                        width: img.naturalWidth || img.width,
+                        height: img.naturalHeight || img.height,
+                        postId: postId,
+                        postType: 'album',
+                        postUrl: albumUrl,
+                        isAlbum: true,
+                        albumIndex: i + 1,
+                        albumTotal: carouselItems.length,
+                        filename: this.generateMediaFilename(img.src, { postId, postType: 'album' }, 'image', i + 1)
+                    });
+                } else {
+                    console.warn('Skipping invalid image URL in album:', img.src);
+                }
+            }
+            
+            // Look for videos in this carousel item
+            const video = item.querySelector('video');
+            if (video && video.src && !video.src.startsWith('blob:')) {
+                // Only process videos with actual URLs, not blob URLs
+                if (video.src.includes('scontent') || video.src.includes('cdninstagram') || video.src.includes('fbcdn')) {
+                    const postId = this.extractPostIdFromUrl(albumUrl);
+                    albumImages.push({
+                        type: 'video',
+                        url: video.src,
+                        thumbnail: video.poster || img?.src,
+                        originalUrl: video.src,
+                        duration: video.duration || null,
+                        width: video.videoWidth || video.width,
+                        height: video.videoHeight || video.height,
+                        postId: postId,
+                        postType: 'album',
+                        postUrl: albumUrl,
+                        isAlbum: true,
+                        albumIndex: i + 1,
+                        albumTotal: carouselItems.length,
+                        filename: this.generateMediaFilename(video.src, { postId, postType: 'album' }, 'video', i + 1)
+                    });
+                } else {
+                    console.warn('Skipping blob/invalid video URL in album:', video.src);
+                }
+            }
+        }
+        
+        console.log('Processed album items:', albumImages.length, albumImages);
+        return albumImages;
+    }
+
+    processAlbumContainers(containers, albumUrl) {
+        const albumImages = [];
+        
+        for (let i = 0; i < containers.length; i++) {
+            const container = containers[i];
+            
+            // Look for images in this container
+            const img = container.querySelector('img');
+            if (img && img.src && !img.alt.includes('profile picture')) {
+                // Ensure we have a valid Instagram CDN URL
+                if (img.src.includes('scontent') || img.src.includes('cdninstagram') || img.src.includes('fbcdn')) {
+                    const postId = this.extractPostIdFromUrl(albumUrl);
+                    albumImages.push({
+                        type: 'image',
+                        url: this.getHighResolutionUrl(img.src),
+                        thumbnail: img.src,
+                        originalUrl: img.src,
+                        alt: img.alt || '',
+                        width: img.naturalWidth || img.width,
+                        height: img.naturalHeight || img.height,
+                        postId: postId,
+                        postType: 'album',
+                        postUrl: albumUrl,
+                        isAlbum: true,
+                        albumIndex: i + 1,
+                        albumTotal: containers.length,
+                        filename: this.generateMediaFilename(img.src, { postId, postType: 'album' }, 'image', i + 1)
+                    });
+                } else {
+                    console.warn('Skipping invalid image URL in album container:', img.src);
+                }
+            }
+            
+            // Look for videos in this container
+            const video = container.querySelector('video');
+            if (video && video.src) {
+                const postId = this.extractPostIdFromUrl(albumUrl);
+                albumImages.push({
+                    type: 'video',
+                    url: video.src,
+                    thumbnail: video.poster || img?.src,
+                    originalUrl: video.src,
+                    duration: video.duration || null,
+                    width: video.videoWidth || video.width,
+                    height: video.videoHeight || video.height,
+                    postId: postId,
+                    postType: 'album',
+                    postUrl: albumUrl,
+                    isAlbum: true,
+                    albumIndex: i + 1,
+                    albumTotal: containers.length,
+                    filename: this.generateMediaFilename(video.src, { postId, postType: 'album' }, 'video', i + 1)
+                });
+            }
+        }
+        
+        return albumImages;
+    }
+
     isValidMediaImage(element, url) {
         // Skip profile pictures
         if (element.alt && element.alt.includes('profile picture')) {
+            return false;
+        }
+        
+        // Skip messages section images (based on HTML sample structure)
+        if (this.isInMessagesSection(element)) {
             return false;
         }
         
@@ -802,6 +1346,88 @@ window.InstagramExtractor = class {
         }
         
         return true;
+    }
+
+    isInMessagesSection(element) {
+        try {
+            // Check if the image is within a messages section based on the HTML structure
+            // From the HTML sample, messages section has:
+            // 1. SVG with aria-label="Messages"
+            // 2. Text content "Messages"
+            // 3. Specific container classes
+            
+            let currentElement = element;
+            let searchDepth = 0;
+            const maxDepth = 10; // Limit search depth to avoid infinite loops
+            
+            while (currentElement && searchDepth < maxDepth) {
+                // Check for Messages SVG icon in the same container
+                const messagesSvg = currentElement.querySelector('svg[aria-label="Messages"]');
+                if (messagesSvg) {
+                    return true;
+                }
+                
+                // Check for "Messages" text in the container
+                const hasMessagesText = currentElement.textContent && currentElement.textContent.includes('Messages');
+                if (hasMessagesText) {
+                    // Additional check: make sure it's not just incidental text
+                    // Check if any span in the container contains "Messages" text
+                    const spans = currentElement.querySelectorAll('span');
+                    let hasMessagesSpan = false;
+                    for (const span of spans) {
+                        if (span.textContent && span.textContent.includes('Messages')) {
+                            hasMessagesSpan = true;
+                            break;
+                        }
+                    }
+                    if (hasMessagesSpan || currentElement.textContent.trim() === 'Messages') {
+                        return true;
+                    }
+                }
+                
+                // Check for specific classes that indicate messages section
+                if (currentElement.classList) {
+                    const classString = currentElement.className;
+                    // Look for button-like containers that might contain Messages
+                    if (classString.includes('_aswp') && classString.includes('_aswq') && hasMessagesText) {
+                        return true;
+                    }
+                }
+                
+                // Check parent element
+                currentElement = currentElement.parentElement;
+                searchDepth++;
+            }
+            
+            // Additional check: look for messages-related attributes
+            let checkElement = element;
+            searchDepth = 0;
+            while (checkElement && searchDepth < maxDepth) {
+                // Check for aria-describedby attributes that might indicate messages
+                if (checkElement.getAttribute('aria-describedby')) {
+                    const ariaId = checkElement.getAttribute('aria-describedby');
+                    if (ariaId && ariaId.includes('_r_')) {
+                        // This pattern was in the messages HTML - check if nearby elements have Messages text
+                        const nearbyElements = checkElement.parentElement?.querySelectorAll('*');
+                        if (nearbyElements) {
+                            for (const nearbyElement of nearbyElements) {
+                                if (nearbyElement.textContent && nearbyElement.textContent.includes('Messages')) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                checkElement = checkElement.parentElement;
+                searchDepth++;
+            }
+            
+            return false;
+        } catch (error) {
+            console.warn('Error checking messages section:', error);
+            return false;
+        }
     }
 
     findVideoThumbnail(videoElement) {
@@ -920,7 +1546,7 @@ window.InstagramExtractor = class {
     }
 
     // Generate meaningful filename for media
-    generateMediaFilename(url, postData, mediaType) {
+    generateMediaFilename(url, postData, mediaType, albumIndex = null) {
         try {
             const username = this.extractUsername() || 'instagram_user';
             const timestamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -930,8 +1556,11 @@ window.InstagramExtractor = class {
             // Get file extension
             const extension = this.getFileExtensionFromUrl(url, mediaType);
             
-            // Generate filename: username_postType_postId_timestamp.ext
-            const filename = `${this.sanitizeFilename(username)}_${postType}_${postId}_${timestamp}.${extension}`;
+            // Add album index if provided
+            const albumSuffix = albumIndex ? `_${albumIndex}` : '';
+            
+            // Generate filename: username_postType_postId_timestamp[_albumIndex].ext
+            const filename = `${this.sanitizeFilename(username)}_${postType}_${postId}_${timestamp}${albumSuffix}.${extension}`;
             
             return filename;
         } catch (error) {
@@ -1032,7 +1661,7 @@ window.InstagramExtractor = class {
             'article', // Posts container
             'h2', // Username header
             'img[alt*="profile picture"]', // Profile picture
-            'span:contains("posts")', // Posts count
+            'span', // Posts count spans
             'a[href*="/followers/"]', // Followers link
             'a[href*="/following/"]' // Following link
         ];
@@ -1040,19 +1669,8 @@ window.InstagramExtractor = class {
         let foundElements = 0;
         for (const selector of profileIndicators) {
             try {
-                if (selector.includes(':contains(')) {
-                    // Handle :contains() pseudo-selector manually
-                    const elements = document.querySelectorAll('span');
-                    for (const element of elements) {
-                        if (element.textContent.includes('posts')) {
-                            foundElements++;
-                            break;
-                        }
-                    }
-                } else {
-                    const element = document.querySelector(selector);
-                    if (element) foundElements++;
-                }
+                const element = document.querySelector(selector);
+                if (element) foundElements++;
             } catch (error) {
                 // Ignore selector errors
             }
@@ -1181,11 +1799,52 @@ window.InstagramExtractor = class {
         }
     }
 
+    // Method to detect if current page is an album post
+    isAlbumPostPage() {
+        try {
+            const url = window.location.href;
+            // Check if URL matches album post pattern (/p/POST_ID)
+            const isPostUrl = /instagram\.com\/p\/[A-Za-z0-9_-]+/.test(url);
+            
+            if (!isPostUrl) return false;
+            
+            // Check for carousel indicator
+            const carouselIndicator = document.querySelector('svg[aria-label="Carousel"]');
+            return !!carouselIndicator;
+        } catch (error) {
+            console.error('Album post detection error:', error);
+            return false;
+        }
+    }
+
+    // Method to extract current album post images (when viewing an album post)
+    async extractCurrentAlbumImages() {
+        try {
+            if (!this.isAlbumPostPage()) {
+                return this.helpers.error.createResponse(false, [], {
+                    message: 'Not an album post page'
+                });
+            }
+
+            const albumUrl = window.location.href;
+            const albumImages = await this.extractImagesFromAlbumPage(albumUrl);
+            
+            return this.helpers.error.createResponse(true, albumImages);
+        } catch (error) {
+            console.error('Current album extraction error:', error);
+            return this.helpers.error.createResponse(false, [], {
+                message: 'Failed to extract album images',
+                error: error.message
+            });
+        }
+    }
+
     // Debug method
     debugExtraction() {
         console.log('Wadi Wadi - Instagram Extractor Debug:', {
             url: window.location.href,
             isProfilePage: this.isInstagramProfilePage(),
+            isAlbumPost: this.isAlbumPostPage(),
             hasProfileElements: this.hasProfilePageElements(),
             username: this.extractUsername(),
             posts: this.extractPostCount(),

@@ -1,12 +1,21 @@
-# Instagram Profile Data Extractor & Media Downloader
+# Instagram Profile Analyzer with AI
 
 ## Project Overview
 
-A **fully functional** Chrome extension that extracts Instagram profile data and downloads images/videos (including Reels) from Instagram pages. The extension features a modern tabbed interface, persistent data storage, and robust media downloading capabilities that work reliably with Instagram's dynamic structure.
+A **fully functional** Chrome extension that extracts Instagram profile data, downloads all media, and provides **AI-powered profile analysis** using the Gemini API. The extension features a modern tabbed interface, persistent data storage, and robust media downloading capabilities that work reliably with Instagram's dynamic structure.
 
 ## ✨ Current Features
 
-### 1. Profile Data Extraction
+### 1. AI-Powered Profile Analysis (New!)
+- **Gemini Integration**: Connects to the Gemini API to provide deep profile insights.
+- **Dual Analysis Modes**:
+    - **My Profile**: Get constructive feedback, content ideas, and strategic advice to grow your own account.
+    - **Competitor Profile**: Analyze a competitor's strategy, identifying their strengths, weaknesses, and key tactics.
+- **Multimodal Analysis**: The AI analyzes the profile's textual data (bio, stats) along with a user-selected sample of up to 5 images and 5 videos.
+- **Secure API Key Storage**: Your Gemini API key is stored securely in local browser storage.
+- **Interactive Media Selection**: A user-friendly modal allows you to choose exactly which media the AI should analyze.
+
+### 2. Profile Data Extraction
 - **Username/ID**: Extract the profile username (e.g., "bousher_valley")
 - **Bio**: Extract profile bio/description text
 - **Post Count**: Extract number of posts (e.g., "549 posts")
@@ -17,7 +26,7 @@ A **fully functional** Chrome extension that extracts Instagram profile data and
 - **Copy to Clipboard**: One-click copying of profile data
 - **JSON Export**: Export profile data as structured JSON
 
-### 2. Advanced Media Download System
+### 3. Advanced Media Download System
 - **Image Downloads**: Download individual images from posts in high quality
 - **Video Downloads**: Download videos from posts with full quality preservation
 - **Reel Video Downloads**: **✅ FULLY WORKING** - Advanced reel video extraction with multi-layer parsing
@@ -28,8 +37,8 @@ A **fully functional** Chrome extension that extracts Instagram profile data and
 - **Batch Progress**: Real-time download progress with detailed success/failure tracking
 - **Reel Processing**: Intelligent reel video URL extraction with up to 30-second processing time
 
-### 3. Modern User Experience
-- **Tabbed Interface**: Clean separation between "Profile Extraction" and "Media Download"
+### 4. Modern User Experience
+- **Tabbed Interface**: Clean separation between "Profile Extraction", "Media Download", and "AI Analysis".
 - **Data Persistence**: Cached data survives popup closes and page navigation
 - **Responsive Design**: Optimized layout with proper scrolling and flex containers
 - **Media Grid**: Thumbnail grid with scroll support and selection indicators
@@ -38,7 +47,7 @@ A **fully functional** Chrome extension that extracts Instagram profile data and
 - **Loading States**: Smooth animations and progress indicators
 - **Error Recovery**: Robust error handling with detailed user messaging
 
-### 4. Technical Reliability
+### 5. Technical Reliability
 - **Multi-Layer Reel Extraction**: 5 different parsing methods for video URL detection
 - **Fallback Strategies**: Multiple URL formats and extraction techniques
 - **CORS Handling**: Smart workarounds for Instagram's security restrictions  
@@ -59,7 +68,7 @@ instagram-extension/
 │   ├── content.js         # Content script for DOM manipulation
 │   └── extractor.js       # Profile data extraction logic
 ├── background/
-│   └── background.js      # Service worker for downloads
+│   └── background.js      # Service worker for downloads & AI analysis
 ├── utils/
 │   ├── selectors.js       # CSS selectors for Instagram elements
 │   └── helpers.js         # Utility functions
@@ -67,21 +76,20 @@ instagram-extension/
 │   ├── icon16.png
 │   ├── icon48.png
 │   └── icon128.png
-├── tests/
-│   └── test_extraction.js # Testing utilities
 └── intagram.html          # Sample Instagram HTML for development
 ```
 
 ### Key Technical Features
 
 1. **Manifest V3**: Uses the latest Chrome extension API
-2. **Content Scripts**: Injects scripts into Instagram pages to access DOM
-3. **Message Passing**: Robust communication between popup, content script, and background
-4. **Chrome Downloads API**: Handles file downloads with proper permissions and progress tracking
-5. **Dynamic Selectors**: Robust selectors that work with Instagram's changing class names
-6. **Multi-Strategy Extraction**: 5+ different methods for extracting reel video URLs
-7. **Data Persistence Layer**: chrome.storage.local integration with smart caching
-8. **Error Recovery Systems**: Comprehensive fallback mechanisms and user feedback
+2. **Gemini API**: Integrates Google's generative AI for profile analysis.
+3. **Content Scripts**: Injects scripts into Instagram pages to access DOM
+4. **Message Passing**: Robust communication between popup, content script, and background
+5. **Chrome Downloads API**: Handles file downloads with proper permissions and progress tracking
+6. **Dynamic Selectors**: Robust selectors that work with Instagram's changing class names
+7. **Multi-Strategy Extraction**: 5+ different methods for extracting reel video URLs
+8. **Data Persistence Layer**: chrome.storage.local integration with smart caching
+9. **Error Recovery Systems**: Comprehensive fallback mechanisms and user feedback
 
 ## Reel Video Download Technology
 
@@ -134,11 +142,17 @@ The extension uses sophisticated selectors based on Instagram's current DOM stru
 ### Usage
 1. **Navigate** to any Instagram profile page
 2. **Click** the extension icon to open the popup
-3. **"Profile Extraction" Tab**: View and copy profile data  
-4. **"Media Download" Tab**: Browse and download media
-5. **Select Media**: Click thumbnails to select individual items
-6. **Download**: Use "Download Selected" or individual download buttons
-7. **Monitor Progress**: Watch real-time download status and notifications
+3. **"AI Analysis" Tab**:
+    - Enter your Gemini API key and click "Save".
+    - Choose an analysis mode ("My Profile" or "Competitor").
+    - Click "Analyze This Profile".
+    - Select up to 5 images and 5 videos from the modal and click "Analyze Selection".
+    - View the results.
+4. **"Profile Extraction" Tab**: View and copy profile data  
+5. **"Media Download" Tab**: Browse and download media
+6. **Select Media**: Click thumbnails to select individual items
+7. **Download**: Use "Download Selected" or individual download buttons
+8. **Monitor Progress**: Watch real-time download status and notifications
 
 ### Reel Video Downloads
 - Reel videos show with a 🎬 icon and "Reel Video" label
@@ -170,7 +184,7 @@ The extension includes intelligent data caching that:
 - **Minimal Permissions**: Requests only required permissions (activeTab, downloads, storage)
 - **Rate Limiting**: Implements delays to avoid overwhelming Instagram
 - **User Consent**: Clear indication of data being extracted
-- **Privacy**: No data storage beyond user's local machine
+- **Privacy**: No data storage beyond user's local machine. API key is stored locally.
 - **Error Handling**: Graceful handling of private profiles and network issues
 
 ## Browser Compatibility
@@ -185,6 +199,7 @@ The extension includes intelligent data caching that:
 
 All major features implemented and thoroughly tested:
 
+- ✅ **AI Profile Analysis**: Gemini-powered insights with user media selection.
 - ✅ **Profile Data Extraction**: Complete with fallback selectors
 - ✅ **Image Downloads**: High-quality image extraction and download
 - ✅ **Video Downloads**: Standard video download functionality  
@@ -226,10 +241,3 @@ All major features implemented and thoroughly tested:
 - Advanced filtering options
 - Cloud storage integration
 - Automated selector updates
-
-## Development Notes
-
-- The extension includes comprehensive error handling and fallback strategies
-- Selectors are designed to be resilient to Instagram's layout changes
-- Regular testing across different profile types is recommended
-- Performance optimizations include debouncing and memory management

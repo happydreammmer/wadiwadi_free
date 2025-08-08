@@ -54,6 +54,11 @@ window.InstagramContentScript = class {
                     sendResponse(videoUrlData);
                     break;
 
+                case 'extractAlbumImages':
+                    const albumData = await this.extractAlbumImages();
+                    sendResponse(albumData);
+                    break;
+
                 default:
                     sendResponse({ success: false, error: 'Unknown action: ' + message.action });
             }
@@ -111,16 +116,41 @@ window.InstagramContentScript = class {
             this.extractor.isInstagramProfilePage() : 
             this.isProfilePage(pathname);
 
+        // Check if this is an album post page
+        const isAlbumPost = this.extractor ? this.extractor.isAlbumPostPage() : false;
+
         return {
             isInstagram: url.includes('instagram.com'),
             isProfile: isProfile,
             isPost: pathname.includes('/p/'),
             isReel: pathname.includes('/reel/'),
             isStory: pathname.includes('/stories/'),
+            isAlbumPost: isAlbumPost,
             url: url,
             pathname: pathname,
             hasProfileElements: this.extractor ? this.extractor.hasProfilePageElements() : false
         };
+    }
+
+    async extractAlbumImages() {
+        if (!this.extractor) {
+            throw new Error('Extractor not initialized');
+        }
+
+        // Use the extractor's album extraction method
+        const result = await this.extractor.extractCurrentAlbumImages();
+        
+        if (!result.success) {
+            throw new Error(result.error.message || 'Failed to extract album images');
+        }
+
+        // Process and enhance album images
+        return result.data.map((item, index) => ({
+            ...item,
+            id: `album_${index}`,
+            index: index,
+            extractedAt: new Date().toISOString()
+        }));
     }
 
     isProfilePage(pathname) {

@@ -13,7 +13,8 @@
     
     "host_permissions": [
       "https://www.instagram.com/*",
-      "https://instagram.com/*"
+      "https://instagram.com/*",
+      "https://generativelanguage.googleapis.com/*"
     ],
     
     "action": {
@@ -57,5 +58,8 @@
         "resources": ["icons/*"],
         "matches": ["https://www.instagram.com/*", "https://instagram.com/*"]
       }
-    ]
+    ],
+    "content_security_policy": {
+      "extension_pages": "script-src 'self' https://esm.sh; object-src 'self'"
+    }
   }

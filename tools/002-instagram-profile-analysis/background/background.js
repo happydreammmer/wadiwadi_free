@@ -1,8 +1,18 @@
  // Wadi Wadi - Instagram Analyzer Background Script (Service Worker)
 
+// Import the Google Generative AI SDK
+try {
+    importScripts('https://esm.sh/@google/genai@1.4.0');
+} catch (e) {
+    console.error('Failed to import Generative AI script:', e);
+}
+
 class InstagramBackground {
     constructor() {
         this.setupEventListeners();
+        // The SDK is loaded, but we'll initialize the genAI instance on-demand
+        this.genAI = null; 
+        this.apiKey = null;
         console.log('Wadi Wadi - Instagram Analyzer Background Service Worker initialized');
     }
 
@@ -60,6 +70,11 @@ class InstagramBackground {
                     await this.cancelDownload(message.downloadId);
                     sendResponse({ success: true });
                     break;
+                
+                case 'analyzeProfile':
+                    const analysisResult = await this.analyzeProfile(message);
+                    sendResponse(analysisResult);
+                    break;
 
                 default:
                     sendResponse({ success: false, error: 'Unknown action: ' + message.action });
@@ -70,11 +85,108 @@ class InstagramBackground {
         }
     }
 
+    async analyzeProfile({ profileData, mediaItems, apiKey, analysisMode }) {
+        try {
+            if (!self.GoogleGenAI) {
+                throw new Error('Google GenAI SDK not loaded.');
+            }
+            
+            if (!apiKey) {
+                throw new Error('API Key is missing.');
+            }
+
+            // Initialize the GenAI instance if it hasn't been already
+            if (!this.genAI || this.apiKey !== apiKey) {
+                this.apiKey = apiKey;
+                this.genAI = new self.GoogleGenAI(apiKey);
+            }
+            
+            const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+
+            const prompt = this.constructAnalysisPrompt(profileData, mediaItems, analysisMode);
+            
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+            
+            return { success: true, data: text };
+
+        } catch (error) {
+            console.error('Gemini API Error:', error);
+            // Provide a more user-friendly error message
+            let errorMessage = error.message;
+            if (errorMessage.includes('API key not valid')) {
+                errorMessage = 'The provided API Key is not valid. Please check and save it again.';
+            } else if (errorMessage.includes('fetch failed')) {
+                errorMessage = 'Could not connect to the Gemini API. Please check your internet connection.';
+            }
+            return { success: false, error: errorMessage };
+        }
+    }
+
+    constructAnalysisPrompt(profileData, mediaItems, analysisMode) {
+        const systemPrompts = {
+            my_profile: `You are an expert Instagram marketing strategist. Analyze the following profile data and media as if you are advising the owner of the account ("My Profile"). Your goal is to provide constructive, encouraging, and actionable feedback.
+
+Focus on:
+- **Strengths:** What are they doing well? (e.g., consistent branding, engaging captions, high-quality visuals).
+- **Areas for Improvement:** What could be better? (e.g., bio optimization, hashtag strategy, content variety).
+- **Content Ideas:** Suggest 3-5 new content ideas based on their existing style and niche.
+- **Overall Strategy:** Give a brief summary of their current strategy and how they can elevate it.
+
+Your tone should be supportive and professional. Format your response using markdown.`, 
+            competitor: `You are a sharp-eyed digital marketing analyst. Analyze the following Instagram profile data and media from the perspective of a competitor. Your goal is to provide a concise, objective, and strategic breakdown of this account.
+
+Focus on:
+- **Content Strategy:** What is their core content strategy? (e.g., pillars, formats, posting frequency).
+- **Visual Style:** Describe their aesthetic and visual branding.
+- **Strengths:** What are their biggest competitive advantages? (e.g., high engagement, unique value proposition, strong community).
+- **Weaknesses:** Where are their potential vulnerabilities or weaknesses? (e.g., inconsistent posting, low engagement on certain types of content, generic captions).
+- **Key Takeaways:** What are the most important strategic insights a competitor can learn from this profile?
+
+Your tone should be analytical and direct. Format your response using markdown.`
+        };
+
+        const selectedPrompt = systemPrompts[analysisMode] || systemPrompts.my_profile;
+
+        let prompt = `${selectedPrompt}\n\n---\n\n**PROFILE DATA:**\n`;
+        prompt += `**Username:** @${profileData.username}\n`;
+        prompt += `**Bio:** ${profileData.bio || 'N/A'}\n`;
+        prompt += `**Posts:** ${profileData.postCount}\n`;
+        prompt += `**Followers:** ${profileData.followersCount}\n`;
+        prompt += `**Following:** ${profileData.followingCount}\n`;
+        if (profileData.category) prompt += `**Category:** ${profileData.category}\n`;
+        if (profileData.externalUrl) prompt += `**Website:** ${profileData.externalUrl}\n`;
+
+        prompt += `\n**MEDIA ANALYSIS:**\nHere are ${mediaItems.length} recent/selected posts to analyze:\n\n`;
+
+        const promptParts = [prompt];
+
+        mediaItems.forEach((item, index) => {
+            const mimeType = item.dataUrl.substring(item.dataUrl.indexOf(':') + 1, item.dataUrl.indexOf(';'));
+            const base64Data = item.dataUrl.split(',')[1];
+
+            promptParts.push({
+                inlineData: {
+                    mimeType: mimeType,
+                    data: base64Data
+                }
+            });
+
+            let mediaDescription = `\n**Post ${index + 1} (${item.type}):**`;
+            if (item.isVideoThumbnail) {
+                mediaDescription += " (This is a thumbnail from a video/reel).";
+            }
+            promptParts.push(mediaDescription);
+        });
+
+        return promptParts;
+    }
+
     async downloadMedia(items, username = 'instagram_user') {
         if (!items || items.length === 0) {
             throw new Error('No media items to download');
         }
-
         const downloads = [];
         const timestamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
         const batchId = `batch_${Date.now()}`;
@@ -167,7 +279,7 @@ class InstagramBackground {
     async extractReelVideoUrl(reelUrl) {
         try {
             // Find an active Instagram tab
-            const tabs = await chrome.tabs.query({ 
+            const tabs = await chrome.tabs.query ({
                 url: ['*://www.instagram.com/*', '*://instagram.com/*'] 
             });
             
@@ -384,7 +496,7 @@ class InstagramBackground {
     async cleanupOldDownloads(daysOld = 30) {
         try {
             const cutoffTime = Date.now() - (daysOld * 24 * 60 * 60 * 1000);
-            const downloads = await chrome.downloads.search({
+            const downloads = await chrome.downloads.search ({
                 startedAfter: new Date(cutoffTime).toISOString()
             });
             

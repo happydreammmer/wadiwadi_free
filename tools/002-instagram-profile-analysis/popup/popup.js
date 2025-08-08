@@ -7,6 +7,7 @@ class InstagramPopup {
         this.mediaItems = [];
         this.filteredMediaItems = [];
         this.selectedMedia = new Set();
+        this.aiSelectedMedia = { images: new Set(), videos: new Set() };
         this.settings = {
             highQualityOnly: true,
             includeVideos: true,
@@ -24,6 +25,7 @@ class InstagramPopup {
         await this.loadCachedData();
         this.setupEventListeners();
         this.checkInstagramPage();
+        this.loadApiKey();
     }
 
     async getCurrentTab() {
@@ -93,6 +95,12 @@ class InstagramPopup {
                 this.switchTab(e.target.dataset.tab);
             });
         });
+
+        // AI Analysis Listeners
+        document.getElementById('saveApiKeyBtn').addEventListener('click', () => this.saveApiKey());
+        document.getElementById('analyzeProfileBtn').addEventListener('click', () => this.startAnalysis());
+        document.getElementById('cancelAnalysisBtn').addEventListener('click', () => this.toggleMediaSelectionModal(false));
+        document.getElementById('confirmAnalysisBtn').addEventListener('click', () => this.confirmAnalysis());
     }
 
     setupSettingsListeners() {
@@ -166,6 +174,7 @@ class InstagramPopup {
         document.getElementById('extractBtn').disabled = true;
         document.getElementById('scanMediaBtn').disabled = true;
         document.getElementById('downloadAllBtn').disabled = true;
+        document.getElementById('analyzeProfileBtn').disabled = true;
     }
 
     async extractProfileData() {
@@ -327,10 +336,22 @@ class InstagramPopup {
         
         if (items.length > 0) {
             const reelCount = items.filter(item => item.type === 'video' && item.postType === 'reel').length;
+            const albumCount = items.filter(item => item.isAlbum || item.postType === 'album').length;
+            
             let message = `Found ${items.length} media items`;
+            
+            const counts = [];
             if (reelCount > 0) {
-                message += ` (${reelCount} reel video${reelCount > 1 ? 's' : ''})`;
+                counts.push(`${reelCount} reel${reelCount > 1 ? 's' : ''}`);
             }
+            if (albumCount > 0) {
+                counts.push(`${albumCount} album item${albumCount > 1 ? 's' : ''}`);
+            }
+            
+            if (counts.length > 0) {
+                message += ` (${counts.join(', ')})`;
+            }
+            
             this.showToast(message, 'success');
         } else {
             this.showToast('No media items found', 'warning');
@@ -359,8 +380,20 @@ class InstagramPopup {
         div.className = 'media-item';
         div.dataset.index = index;
 
-        // Create more detailed media info
-        const postType = item.postType === 'reel' ? 'Reel' : 'Post';
+        // Determine media type and display
+        let postType = 'Post';
+        let mediaTypeIcon = '📷';
+        
+        if (item.postType === 'reel') {
+            postType = 'Reel';
+            mediaTypeIcon = '🎬';
+        } else if (item.postType === 'album' || item.isAlbum) {
+            postType = 'Album';
+            mediaTypeIcon = '📖';
+        } else if (item.type === 'video') {
+            mediaTypeIcon = '🎥';
+        }
+        
         const dimensions = item.width && item.height ? `${item.width}×${item.height}` : '';
         const title = `${postType} ${index + 1}${dimensions ? ` (${dimensions})` : ''}`;
         
@@ -368,18 +401,18 @@ class InstagramPopup {
         const filename = item.filename || `${item.type}_${index + 1}`;
         const fileSize = item.fileSize ? this.formatFileSize(item.fileSize) : '';
 
-        // Special handling for reel videos
-        const isReelVideo = item.type === 'video' && item.postType === 'reel';
-        const mediaTypeIcon = isReelVideo ? '🎬' : (item.type === 'video' ? '🎥' : '📷');
+        // Album info display
+        const albumInfo = item.isAlbum && item.albumIndex && item.albumTotal ? 
+            `${item.albumIndex}/${item.albumTotal}` : '';
         
         div.innerHTML = `
             <img src="${item.thumbnail || item.url}" alt="${title}" title="${title}" loading="lazy">
             <div class="media-type">${mediaTypeIcon}</div>
             <div class="media-info">
-                <div class="media-post-type">${postType}${isReelVideo ? ' Video' : ''}</div>
+                <div class="media-post-type">${postType}${item.type === 'video' ? ' Video' : ''}</div>
                 ${item.postId ? `<div class="media-post-id">${item.postId.substring(0, 8)}...</div>` : ''}
+                ${albumInfo ? `<div class="media-album-info">${albumInfo}</div>` : ''}
                 ${fileSize ? `<div class="media-file-size">${fileSize}</div>` : ''}
-                ${isReelVideo ? `<div class="media-file-size">Video</div>` : ''}
             </div>
             <div class="media-overlay">
                 <button class="download-btn" title="Download ${filename}">⬇️</button>
@@ -857,10 +890,13 @@ class InstagramPopup {
         
         switch (filterType) {
             case 'images':
-                filtered = filtered.filter(item => item.type === 'image');
+                filtered = filtered.filter(item => item.type === 'image' && !item.isAlbum);
                 break;
             case 'videos':
                 filtered = filtered.filter(item => item.type === 'video');
+                break;
+            case 'albums':
+                filtered = filtered.filter(item => item.isAlbum || item.postType === 'album');
                 break;
             case 'reels':
                 filtered = filtered.filter(item => item.postType === 'reel');
@@ -1021,7 +1057,7 @@ class InstagramPopup {
         
         // Extract username from Instagram URLs
         const getUsername = (url) => {
-            const match = url.match(/instagram\.com\/([^\/\?]+)/);
+            const match = url.match(/instagram\.com\/([^\/?]+)/);
             return match ? match[1] : null;
         };
 
@@ -1131,6 +1167,205 @@ class InstagramPopup {
         placeholderElement.addEventListener('click', () => {
             window.open(imageUrl, '_blank');
         });
+    }
+
+    // --- AI Analysis Methods ---
+
+    async saveApiKey() {
+        const apiKey = document.getElementById('apiKey').value;
+        if (!apiKey) {
+            this.showToast('Please enter an API key.', 'warning');
+            return;
+        }
+        await chrome.storage.local.set({ geminiApiKey: apiKey });
+        this.showToast('API Key saved successfully!', 'success');
+        document.getElementById('analyzeProfileBtn').disabled = false;
+    }
+
+    async loadApiKey() {
+        const result = await chrome.storage.local.get('geminiApiKey');
+        if (result.geminiApiKey) {
+            document.getElementById('apiKey').value = result.geminiApiKey;
+            document.getElementById('analyzeProfileBtn').disabled = false;
+        }
+    }
+
+    async startAnalysis() {
+        // 1. Ensure profile data is extracted
+        if (!this.profileData || !this.profileData.username) {
+            await this.extractProfileData();
+            if (!this.profileData || !this.profileData.username) {
+                this.showError('Could not extract profile data to start analysis.');
+                return;
+            }
+        }
+
+        // 2. Scan for media if not already done
+        if (this.mediaItems.length === 0) {
+            await this.scanMedia();
+            if (this.mediaItems.length === 0) {
+                this.showError('No media found on the profile to analyze.');
+                return;
+            }
+        }
+
+        // 3. Show media selection modal
+        this.populateMediaSelectionGrid();
+        this.toggleMediaSelectionModal(true);
+    }
+
+    toggleMediaSelectionModal(show) {
+        const modal = document.getElementById('mediaSelectionModal');
+        modal.style.display = show ? 'flex' : 'none';
+    }
+
+    populateMediaSelectionGrid() {
+        const grid = document.getElementById('mediaSelectionGrid');
+        grid.innerHTML = '';
+        this.aiSelectedMedia = { images: new Set(), videos: new Set() };
+        this.updateAISelectionCounters();
+
+        this.mediaItems.forEach((item, index) => {
+            const div = this.createMediaElement(item, index);
+            div.dataset.mediaType = item.type;
+            div.dataset.originalIndex = index;
+            
+            // Remove download button for this view
+            const downloadBtn = div.querySelector('.download-btn');
+            if(downloadBtn) downloadBtn.remove();
+
+            div.addEventListener('click', () => this.toggleAIAnalysisMediaSelection(div, item));
+            grid.appendChild(div);
+        });
+    }
+
+    toggleAIAnalysisMediaSelection(element, item) {
+        const isSelected = element.classList.contains('selected');
+        const isImage = item.type === 'image';
+        const isVideo = item.type === 'video';
+
+        if (isSelected) {
+            element.classList.remove('selected');
+            if (isImage) this.aiSelectedMedia.images.delete(item);
+            if (isVideo) this.aiSelectedMedia.videos.delete(item);
+        } else {
+            if (isImage && this.aiSelectedMedia.images.size < 5) {
+                element.classList.add('selected');
+                this.aiSelectedMedia.images.add(item);
+            } else if (isVideo && this.aiSelectedMedia.videos.size < 5) {
+                element.classList.add('selected');
+                this.aiSelectedMedia.videos.add(item);
+            } else {
+                this.showToast(`You can only select up to 5 ${isImage ? 'images' : 'videos'}.`, 'warning');
+            }
+        }
+        this.updateAISelectionCounters();
+        this.updateDisabledMediaItems();
+    }
+
+    updateAISelectionCounters() {
+        document.getElementById('imageSelectionCount').textContent = `Images: ${this.aiSelectedMedia.images.size}/5`;
+        document.getElementById('videoSelectionCount').textContent = `Videos: ${this.aiSelectedMedia.videos.size}/5`;
+        
+        const confirmBtn = document.getElementById('confirmAnalysisBtn');
+        const totalSelected = this.aiSelectedMedia.images.size + this.aiSelectedMedia.videos.size;
+        confirmBtn.disabled = totalSelected === 0;
+    }
+    
+    updateDisabledMediaItems() {
+        const grid = document.getElementById('mediaSelectionGrid');
+        const items = grid.querySelectorAll('.media-item');
+        const imagesFull = this.aiSelectedMedia.images.size >= 5;
+        const videosFull = this.aiSelectedMedia.videos.size >= 5;
+
+        items.forEach(element => {
+            const isSelected = element.classList.contains('selected');
+            if (isSelected) {
+                element.classList.remove('disabled');
+                return;
+            }
+            const isImage = element.dataset.mediaType === 'image';
+            const isVideo = element.dataset.mediaType === 'video';
+
+            if ((isImage && imagesFull) || (isVideo && videosFull)) {
+                element.classList.add('disabled');
+            } else {
+                element.classList.remove('disabled');
+            }
+        });
+    }
+
+    async confirmAnalysis() {
+        this.toggleMediaSelectionModal(false);
+        this.showLoading('Preparing AI analysis...');
+
+        const apiKey = document.getElementById('apiKey').value;
+        const analysisMode = document.querySelector('input[name="analysisMode"]:checked').value;
+        const selectedItems = [...this.aiSelectedMedia.images, ...this.aiSelectedMedia.videos];
+
+        try {
+            // Fetch image data URLs
+            const mediaWithData = [];
+            for (const item of selectedItems) {
+                if (item.type === 'image') {
+                    this.showLoading(`Fetching image data (${mediaWithData.length + 1}/${selectedItems.length})...`);
+                    const response = await this.sendMessageToContent({
+                        action: 'fetchImageAsDataUrl',
+                        imageUrl: item.url
+                    });
+                    if (response.success) {
+                        mediaWithData.push({ ...item, dataUrl: response.data });
+                    }
+                } else {
+                     // For videos, we'll just pass the thumbnail for now
+                    this.showLoading(`Fetching video thumbnail data (${mediaWithData.length + 1}/${selectedItems.length})...`);
+                     const response = await this.sendMessageToContent({
+                        action: 'fetchImageAsDataUrl',
+                        imageUrl: item.thumbnail
+                    });
+                    if (response.success) {
+                        mediaWithData.push({ ...item, dataUrl: response.data, isVideoThumbnail: true });
+                    }
+                }
+            }
+
+            this.showLoading('Sending data to AI for analysis...');
+            const response = await this.sendMessageToBackground({
+                action: 'analyzeProfile',
+                profileData: this.profileData,
+                mediaItems: mediaWithData,
+                apiKey: apiKey,
+                analysisMode: analysisMode
+            });
+
+            if (response && response.success) {
+                this.displayAnalysisResults(response.data);
+            } else {
+                throw new Error(response?.error || 'AI analysis failed');
+            }
+
+        } catch (error) {
+            console.error('Analysis error:', error);
+            this.showError('Analysis failed: ' + error.message);
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    displayAnalysisResults(results) {
+        const resultsSection = document.getElementById('analysisResultsSection');
+        const resultContent = document.getElementById('analysisResult');
+        
+        // A simple markdown-to-HTML converter
+        let html = results.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italics
+        html = html.replace(/^- (.*$)/gm, '<li>$1</li>'); // List items
+        html = html.replace(/^(<li>.*<\/li>)$/gm, '<ul>$1</ul>'); // Wrap lists
+        html = html.replace(/\n/g, '<br>'); // Newlines
+
+        resultContent.innerHTML = html;
+        resultsSection.style.display = 'block';
+        this.showToast('Analysis complete!', 'success');
     }
 }
 
