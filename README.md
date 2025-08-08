@@ -83,48 +83,30 @@ Each video on our channel is a self-contained story of creation. We follow a "Go
 
 This repository is the central hub for our community and every tool we create.
 
-*   **Project Structure:** Each tool has its own dedicated folder in `/tools/` with the following structure:
+*   **Project Structure:** Each project (tool or workflow) has its own dedicated folder under `/tools` or `/workflows`. Inside each folder, you'll typically find:
+    *   `README.md`: A detailed guide explaining what the project does and how to use it.
+    *   Source code and configuration files.
+    *   `CLAUDE.md` or `GEMINI.md`: Development notes and AI conversations.
 
-```
-tools/
-└── 001-linkedin-profile-researcher/
-    ├── CLAUDE.md                    # Development documentation
-    ├── README.md                    # Tool-specific documentation  
-    ├── TODO.md                      # Development tasks
-    ├── manifest.json               # Chrome extension configuration
-    ├── background.js               # Service worker
-    ├── styles.css                  # UI styles
-    ├── core/
-    │   ├── constants.js            # Configuration and colors
-    │   ├── content-main.js         # Main application logic
-    │   └── utils.js                # Utility functions
-    ├── components/
-    │   ├── api-key-manager.js      # API key management UI
-    │   ├── gemini-researcher.js    # AI research logic
-    │   ├── progress-panel.js       # Progress tracking UI
-    │   ├── results-panel.js        # Results display UI
-    │   └── screenshot-handler.js   # Screenshot handling
-    └── utils/
-        ├── pdf-export.js           # PDF generation
-        └── storage.js              # Data storage management
-```
 *   **Repository Structure:**
     ```
     wadiwadi-free/
     ├── README.md                   # This file
     ├── LICENSE                     # MIT License
     ├── START.md                    # Getting started guide
-    ├── docs/                       # Documentation
-    │   └── GEMINI_API_DOC.md      # Gemini API documentation
-    └── tools/                      # All project tools
-        └── 001-linkedin-profile-researcher/  # LinkedIn research extension
+    ├── docs/                       # General documentation
+    ├── tools/                      # AI-powered browser extensions and tools
+    └── workflows/                  # n8n automation workflows
     ```
+
 *   **Get the Code:** To get started with a project, you can `git clone` this repository to your computer.
 *   **Contribute:** Have an idea for a tool or an improvement? Open an "Issue" in the repository. We want this to be a collaborative space.
 
 ---
 
 ## 🛠️ Available Tools
+
+This section includes AI-powered browser extensions and other custom-built tools.
 
 ### 001 - LinkedIn Profile Researcher
 **📍 Location:** `/tools/001-linkedin-profile-researcher/`
@@ -167,6 +149,27 @@ A powerful Chrome extension that transforms LinkedIn profile research using AI. 
 - ✅ Enhanced print styles for professional PDF output
 
 This tool showcases the entire development lifecycle, from initial concept to a polished, production-ready application that solves a real-world problem—including the messy reality of debugging and continuous improvement.
+
+---
+
+## 🚀 Available Workflows
+
+This section contains automation workflows for tools like n8n, designed to connect different apps and services to automate repetitive tasks.
+
+### 000 - Self-Hosted n8n with Docker
+**📍 Location:** `/workflows/000-setup-n8n/`
+
+A simple setup to run your own instance of n8n locally using Docker. This is the foundation for building and testing custom automation workflows.
+
+**✨ Features:**
+- **Docker Compose:** One-command setup using `docker-compose.yml`.
+- **Local Environment:** Perfect for developing and testing n8n workflows securely on your own machine.
+- **Foundation for Automation:** The starting point for all n8n projects in this repository.
+
+**💡 What You'll Learn:**
+- **Docker Basics:** How to use Docker and Docker Compose to run services.
+- **n8n Setup:** The fundamentals of getting an n8n instance running.
+- **Self-Hosting:** The benefits of controlling your own automation platform.
 
 <br>
 

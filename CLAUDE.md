@@ -14,9 +14,10 @@ wadiwadi-free/
 ├── START.md                    # Development environment setup guide
 ├── docs/                       # Documentation
 │   └── GEMINI_API_DOC.md      # Comprehensive Gemini API reference
-└── tools/                      # Individual tool projects
-    ├── 001-linkedin-profile-researcher/  # Production-ready LinkedIn research extension
-    └── 002-instagram-profile-analysis/   # Instagram profile analysis extension
+├── tools/                      # Individual tool projects
+│   ├── 001-linkedin-profile-researcher/  # Production-ready LinkedIn research extension
+│   └── 002-instagram-profile-analysis/   # Instagram profile analysis extension
+└── workflows/                  # n8n automation workflows
 ```
 
 ## Development Environment

@@ -17,7 +17,8 @@ The primary audience is curious beginners and non-developers. The tone should be
 -   `README.md`: The main entry point and public face of the project. It explains the philosophy, mission, and how to get involved. **All changes should preserve its structure and tone.**
 -   `START.md`: A step-by-step quickstart guide for users to set up their local AI development environment. This is a critical document for the target audience.
 -   `.github/assets/`: Contains all branding images (banner, logo) and favicons.
--   `/projects/`: (Currently non-existent) This directory will house the individual AI tool projects, with each project in its own sub-folder (e.g., `/projects/01-email-triage-ai`).
+-   `/tools/`: This directory houses individual AI tool projects, with each project in its own sub-folder (e.g., `/tools/001-linkedin-profile-researcher`).
+-   `/workflows/`: This directory contains automation workflows for tools like n8n.
 
 ## 3. Technical & Style Conventions
 
