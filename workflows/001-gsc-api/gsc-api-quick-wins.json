@@ -1,0 +1,343 @@
+{
+  "name": "Free - GSC API",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "d27b7ce8-8d05-4356-8db3-c7931bcb8cab",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        128,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/webmasters/v3/sites/sc-domain%3A{{YOUR_DOMAIN}}/searchAnalytics/query",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_type",
+              "value": "offline"
+            },
+            {
+              "name": "prompt",
+              "value": "consent"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"startDate\": \"{{ $today.minus(33, 'days').toFormat('yyyy-MM-dd')}}\",\n  \"endDate\": \"{{ $today.minus(3, 'days').toFormat('yyyy-MM-dd')}}\",\n  \"dimensions\": [\n    \"page\",\n    \"query\"\n  ],\n  \"rowLimit\": 100\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        320,
+        112
+      ],
+      "id": "6628b5bc-12a2-4d56-ad8f-fe1ba6a71ff8",
+      "name": "HTTP Request",
+      "credentials": {
+        "googleOAuth2Api": {
+          "id": "{{YOUR_GOOGLE_OAUTH_CREDENTIAL_ID}}",
+          "name": "Google OAuth2 Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.rows }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "### **System Prompt for SEO Analysis**\n\n**Your Persona:**\nYou are an expert SEO Analyst AI. Your mission is to analyze Google Search Console (GSC) data to find the most impactful and easy-to-implement optimization opportunities, often called \"low-hanging fruits.\". You must use the \"writeSheets\" tool to write the final report in the google sheets.\n\n**Context of the Task:**\nYou will receive data from the GSC API in a JSON format. The data will be a list of objects, where each object represents the performance of a specific query on a specific page for a given day. Your analysis must be based *exclusively* on the provided data.\n\n**Input Data Structure:**\nThe JSON input will contain a `rows` key, which is an array of objects. Each object has the following structure:\n- `keys`: An array containing `[page_url, query]`\n- `clicks`: Total number of clicks.\n- `impressions`: Total number of impressions.\n- `ctr`: The Click-Through Rate.\n- `position`: The average search ranking position.\n\n**Your Primary Goal:**\nYour goal is to analyze the data and generate a prioritized list of actionable SEO recommendations. Focus on three key areas of opportunity:\n\n1.  **Striking Distance Keywords:** Pages that are close to ranking on the first page of Google.\n2.  **Low CTR Content:** Pages that are visible (high impressions) but not earning clicks.\n3.  **Query & Content Consolidation:** Opportunities to combine content or better target keywords to avoid cannibalization.\n\n**Required Analysis & Output Format:**\n\nYou must structure your response in Markdown and follow this format precisely:\n\n---\n\n### **SEO Low-Hanging Fruit Analysis**\n\nHere is a summary of the top optimization opportunities based on the provided GSC data.\n\n### 🚀 **1. Striking Distance Opportunities (Positions 8-20)**\n\nThese pages are ranking on the edge of page one or on page two. A small optimization push can provide a significant boost in traffic.\n\n**Analysis:**\n- Identify all queries where the average `position` is between **8.0** and **20.0**.\n- Prioritize the ones with the highest `impressions` as they have the most to gain.\n\n<br>\n\n### 👀 **2. High Impression / Low CTR Opportunities**\n\nThese pages are frequently shown in search results but their titles and descriptions aren't compelling enough to win the click.\n\n**Analysis:**\n- Identify queries with high `impressions` (e.g., > 100) but a `ctr` that is below the expected average for their rank.\n- Specifically, look for:\n    - `position` 1-5 with `ctr` < 10%\n    - `position` 6-10 with `ctr` < 4%\n\n<br>\n\n### 🔗 **3. Keyword Consolidation & Review**\n\nThis analysis looks for closely related queries that may indicate that content could be combined or better optimized.\n\n**Analysis:**\n- Identify groups of very similar queries (e.g., \"best self-help books\" vs. \"self-help books\").\n- Check if they point to the same URL or different URLs.\n\n---\n\n**Final Report:**\n\nUse \"writeSheets\" tool to write the report in the google sheets. This is crucial."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        528,
+        112
+      ],
+      "id": "cada6bca-5981-4ada-9c88-acc0cc6bb86c",
+      "name": "AI Agent",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "The final report must be written in this Google Sheets tool.",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "{{YOUR_GOOGLE_SHEETS_ID}}",
+          "mode": "list",
+          "cachedResultName": "SEO Analysis Results",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/{{YOUR_GOOGLE_SHEETS_ID}}/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "SEO Quick Wins",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/{{YOUR_GOOGLE_SHEETS_ID}}/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Analysis Type": "={{ $fromAI('Analysis_Type', ``, 'string') }}",
+            "Page URL": "={{ $fromAI('Page_URL', ``, 'string') }}",
+            "Keyword": "={{ $fromAI('Keyword', ``, 'string') }}",
+            "Impressions": "={{ $fromAI('Impressions', ``, 'number') }}",
+            "Clicks": "={{ $fromAI('Clicks', ``, 'number') }}",
+            "Description": "={{ $fromAI('Description', ``, 'string') }}",
+            "ID": "={{ $fromAI('ID', ``, 'number') }}",
+            "Position": "={{ $fromAI('Position', ``, 'number') }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Analysis Type",
+              "displayName": "Analysis Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Page URL",
+              "displayName": "Page URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Keyword",
+              "displayName": "Keyword",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Impressions",
+              "displayName": "Impressions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Clicks",
+              "displayName": "Clicks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Position",
+              "displayName": "Position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        720,
+        304
+      ],
+      "id": "11e984f1-52a3-4f48-bc72-cee3947c6f04",
+      "name": "writeSheets",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "{{YOUR_GOOGLE_SHEETS_CREDENTIAL_ID}}",
+          "name": "Google Sheets OAuth2 Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        576,
+        304
+      ],
+      "id": "d2fb0421-9955-4a75-9261-49ef4551cf62",
+      "name": "Gemini 2.5 Flash",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "{{YOUR_GEMINI_API_CREDENTIAL_ID}}",
+          "name": "Google Gemini API Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        432,
+        304
+      ],
+      "id": "c9c3e1f8-0dde-4126-b1ad-4be4bf96acbd",
+      "name": "Gemini 2.5 Pro",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "{{YOUR_GEMINI_API_CREDENTIAL_ID}}",
+          "name": "Google Gemini API Credential"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Manual Trigger": [
+      {
+        "json": {}
+      }
+    ]
+  },
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "writeSheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ],
+      "main": [
+        []
+      ]
+    },
+    "Gemini 2.5 Flash": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Gemini 2.5 Pro": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0a82f256-7a82-43a2-aba5-ea660612bda4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "55fef36d536009900cd34b86784be52a5144970f7ec4e650901e1f293e223fae"
+  },
+  "id": "Zao5Ot4VNX43ixk8",
+  "tags": [
+    {
+      "createdAt": "2025-08-04T09:29:03.097Z",
+      "updatedAt": "2025-08-05T09:29:35.688Z",
+      "id": "dJwSbLVKbLItIoXf",
+      "name": "Client"
+    }
+  ]
+}
