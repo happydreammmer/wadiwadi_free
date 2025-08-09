@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+      "n8n-mcp": {
+        "command": "npx",
+        "args": ["n8n-mcp"],
+        "env": {
+          "LOG_LEVEL": "error"
+        }
+      }
+    }
+  }
