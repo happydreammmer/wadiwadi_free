@@ -109,46 +109,45 @@ This repository is the central hub for our community and every tool we create.
 This section includes AI-powered browser extensions and other custom-built tools.
 
 ### 001 - LinkedIn Profile Researcher
-**📍 Location:** `/tools/001-linkedin-profile-researcher/`
+**📍 Location:** `/tools/001-linkedin-profile-researcher/`  
+**🚀 Status:** ✅ **Production Ready**
 
-A powerful Chrome extension that transforms LinkedIn profile research using AI. This tool demonstrates the complete journey from a simple idea to a production-ready browser extension.
+A powerful Chrome extension that transforms LinkedIn profile research using AI. Generate comprehensive bilingual reports (English/Arabic) from LinkedIn profiles with one-click screenshot analysis.
 
-**✨ Features:**
-- 🔍 **AI-Powered Analysis:** Gemini 2.5 Pro/Flash models with 8192 token limit for comprehensive analysis
-- 🌐 **Bilingual Research:** Generates detailed reports in both English and Arabic with language switching
-- 📸 **Smart Screenshot Capture:** One-click profile analysis using Chrome's activeTab permissions
-- 📊 **Professional Reports:** Detailed insights with executive summary, company research, and verification
-- 💾 **Intelligent Caching:** 7-day local storage with automatic cleanup and access tracking
-- 📄 **PDF Export:** Clean, printable reports with optimized page breaks and professional formatting
-- 🎨 **Modern UI:** Glassmorphic design with real-time progress tracking and smooth animations
-- 🔄 **Smart Positioning:** Results panel automatically moves to progress panel position after completion
-
-**🏗️ Architecture:**
-- **Modular Design:** Clean separation across 5 core components and 3 utility modules
-- **Gemini AI Integration:** Multimodal analysis with automatic fallback and Google Search integration
-- **Chrome Extension V3:** Manifest V3 compliance with proper permissions and service workers
-- **Optimized Layout:** Single-scroll interface with flexbox layout and no double scrolling issues
-- **Error Handling:** Comprehensive error recovery with user-friendly messages
-
-**🚀 Status:** ✅ **Production Ready** - Fully functional with recent optimizations (June 2025)
+**✨ Key Features:**
+- **AI-Powered Analysis:** Gemini 2.5 Pro/Flash with 8192 token limit
+- **Bilingual Reports:** Professional insights in English and Arabic
+- **PDF Export:** Clean, printable reports with optimized formatting
+- **Smart Caching:** 7-day local storage with intelligent cleanup
+- **Modern UI:** Glassmorphic design with real-time progress tracking
 
 **💡 What You'll Learn:**
-- **Chrome Extension Development:** Manifest V3, service workers, content scripts, and permissions
-- **AI API Integration:** Gemini API with multimodal analysis, fallback handling, and token optimization
-- **Modern JavaScript:** ES6+ with async/await, modular architecture, and clean separation of concerns
-- **UI/UX Design:** Glassmorphic interfaces, real-time progress tracking, and responsive layouts
-- **Browser APIs:** Screenshot capture, storage management, and message passing
-- **PDF Generation:** Print-optimized layouts with proper page breaks and typography
-- **Debugging & Optimization:** Error handling, performance optimization, and production troubleshooting
+- Chrome Extension V3 development with service workers
+- Gemini API integration with multimodal analysis
+- Modern JavaScript patterns and modular architecture
+- Browser APIs (screenshots, storage, message passing)
+- PDF generation and responsive UI design
 
-**🔧 Recent Fixes & Optimizations (June 2025):**
-- ✅ Increased API token limits from 2048 to 8192 for longer responses
-- ✅ Fixed PDF export constructor loading issues  
-- ✅ Implemented smart panel positioning after research completion
-- ✅ Optimized layout to eliminate double scrolling with flexbox architecture
-- ✅ Enhanced print styles for professional PDF output
+### 002 - Instagram Profile Analysis
+**📍 Location:** `/tools/002-instagram-profile-analysis/`  
+**🚀 Status:** ✅ **Production Ready**
 
-This tool showcases the entire development lifecycle, from initial concept to a polished, production-ready application that solves a real-world problem—including the messy reality of debugging and continuous improvement.
+A sophisticated Chrome extension that extracts Instagram profile data, downloads media, and provides AI-powered profile analysis. Features advanced reel video extraction and intelligent media organization.
+
+**✨ Key Features:**
+- **AI Profile Analysis:** Gemini-powered insights with user media selection
+- **Complete Data Extraction:** Bio, followers, posts, and profile statistics
+- **Advanced Media Downloads:** Images, videos, and reels with multi-layer extraction
+- **Modern Tabbed Interface:** Clean separation of profile, media, and AI analysis
+- **Smart Caching:** Context-aware persistence across sessions
+- **Bulk Operations:** Select and download multiple media items with progress tracking
+
+**💡 What You'll Learn:**
+- Advanced DOM parsing and dynamic selector strategies
+- Chrome Downloads API with bulk operations
+- Complex message passing between extension components
+- Instagram's changing DOM structure and fallback techniques
+- Media processing and CORS handling strategies
 
 ---
 
@@ -162,16 +161,32 @@ This section contains automation workflows for tools like n8n, designed to conne
 A simple setup to run your own instance of n8n locally using Docker. This is the foundation for building and testing custom automation workflows.
 
 **✨ Features:**
-- **Docker Compose:** One-command setup using `docker-compose.yml`.
-- **Local Environment:** Perfect for developing and testing n8n workflows securely on your own machine.
-- **Foundation for Automation:** The starting point for all n8n projects in this repository.
+- **Docker Compose:** One-command setup using `docker-compose.yml`
+- **Local Environment:** Perfect for developing and testing n8n workflows securely
+- **Foundation for Automation:** Starting point for all n8n projects in this repository
 
 **💡 What You'll Learn:**
-- **Docker Basics:** How to use Docker and Docker Compose to run services.
-- **n8n Setup:** The fundamentals of getting an n8n instance running.
-- **Self-Hosting:** The benefits of controlling your own automation platform.
+- Docker and Docker Compose fundamentals
+- n8n setup and self-hosting benefits
+- Local automation platform development
 
-<br>
+### 001 - GSC API Quick Wins
+**📍 Location:** `/workflows/001-gsc-api/`  
+**🚀 Status:** ✅ **Production Ready**
+
+An intelligent n8n workflow that automatically analyzes Google Search Console data using AI to identify SEO "quick wins" - high-impact, low-effort optimization opportunities.
+
+**✨ Key Features:**
+- **Automated GSC Data Fetching:** Pulls 30-day search performance data via API
+- **AI-Powered SEO Analysis:** Gemini AI identifies striking distance keywords, low CTR pages, and consolidation opportunities
+- **Google Sheets Integration:** Writes structured findings directly to spreadsheets
+- **Professional Setup:** Complete with placeholders and comprehensive documentation
+
+**💡 What You'll Learn:**
+- Google Search Console API integration
+- n8n workflow automation with AI agents
+- SEO data analysis and optimization strategies
+- Google OAuth2 and Sheets API configuration
 
 <details>
 <summary><strong>🛠️ The Tools of the Trade: Your Local AI Dev Setup</strong></summary>
